@@ -1,7 +1,7 @@
 import requests
 import json
 
-api_key = "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"  # OpenAI API 키를 입력하세요.
+api_key = "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"  # OpenAI API 키를 입력하세요.
 headers = {
     "Authorization": "Bearer " + api_key,
     "Content-Type": "application/json"
