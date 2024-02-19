@@ -21,21 +21,86 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # llm과 각 센서별 스키마 정의.
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo")
+llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106")
 led_Control_Schema = {
+    "description": """
+    - This field specifies the brightness of the light from 0 (completely off) to 255 (maximum brightness).
+    - Please only use multiples of 7 to provide users with a variety of values.
+    - The RGB value is determined by considering the user's situation and emotions.
+    - Let's Think about step by step.
+    """,
     "properties": {
-        "brightness of lights": {
+        "red": {
             "type": "integer",
             "minimum": 0,  # 최소값을 0으로 설정
             "maximum": 255,  # 최대값을 255로 설정
-            "description": "This field specifies the brightness of lights, from 0 (completely off) to 255 (full brightness). Be sure to use only multiples of 7 to give users a variety of values. Consider the user's situation and emotions to come up with an appropriate brightness. Let's Think about step by step",
+            "description": "This column is the red value of RGBleb, which means aggressive, passionate, and loving.",
         },
+        "green": {
+            "type": "integer",
+            "minimum": 0,  # 최소값을 0으로 설정
+            "maximum": 255,  # 최대값을 255로 설정
+            "description": "This column is the green value of RGBleb, meaning calm, stable, and neutral.",
+        },
+        "blue": {
+            "type": "integer",
+            "minimum": 0,  # 최소값을 0으로 설정
+            "maximum": 255,  # 최대값을 255로 설정
+            "description": "This column is the blue value of RGBleb, meaning gloomy, fearful, and negative.",
+        },
+                        
     },
-    "required": ["brightness of lights"]
+    "required": ["red","green","blue"]
 }
 
-@app.route('/led_Control', methods=['POST'])
-def generate_text():
+buzzer_Control_Schema = {
+  "description": "This scheme is used to buzzer in picobricks. You can control the buzzer through picobricks by defining the melody, the duration of the notes, and the number of repetitions of the buzzer. let's think about step by step.",
+  "properties": {
+    "buzzer": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "maximum" : 1024
+      },
+      "description": "An array of frequencies in Hz for each note in the buzzer. Each value must be an integer representing the frequency."
+    },
+    "noteDurations": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1  # 지속 시간은 최소 1ms 이상이어야 합니다.
+      },
+      "description": "An array of durations in milliseconds for each note in the buzzer. Each value must be an integer representing the duration."
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 1,  # 반복 횟수는 최소 1이어야 합니다.
+      "description": "The number of times the buzzer should be repeated. Must be a positive integer."
+    }
+  },
+  "required": ["buzzer", "noteDurations", "repeat"]
+}
+
+devide_Sensor = {
+    "description": """
+    - This request parses the user's request and returns one of the picobricks sensors.
+    - Let's Think about it step by step.
+    """,
+    "properties": {
+        "sensor": {
+            "type": "integer",
+            "enum": ["LED", "BUZZER", "MONITER","DHT", "RELAY","LDR","WIRELESS"],
+            "description": "This column is the red value of RGBleb, which means aggressive, passionate, and loving.",
+        },                   
+    },
+    "required": ["sensor"]
+    
+}
+
+
+
+@app.route('/sensor_Control', methods=['POST'])
+def sensor_Control():
     user_ip = request.remote_addr  # 요청한 사용자의 IP 주소
     data = request.json
     query = data['query']
@@ -45,15 +110,27 @@ def generate_text():
 
     logger.info(f"Request {user_ip}: {query}")  # 로그에 요청 데이터와 사용자 IP 기록
 
+    #어떤 센서값의 요청인지 분리하는 코드.
     try:
-        chain = create_tagging_chain(led_Control_Schema, llm)
+        chain = create_tagging_chain(devide_Sensor, llm)
         answer = chain.invoke(query)
-        output = "led," + str(answer['text']['brightness of lights'])
-        logger.info(f"Response {user_ip}: {output}")  # 로그에 응답 데이터와 사용자 IP 기록
-        return jsonify(output)
+        task_sensor = answer['text']['sensor']
+        if task_sensor == "LED":
+            chain = create_tagging_chain(led_Control_Schema, llm)
+            answer = chain.invoke(query)
+            return jsonify(answer)
+        if task_sensor == "BUZZER":
+            chain = create_tagging_chain(buzzer_Control_Schema, llm)
+            answer = chain.invoke(query)
+            return jsonify(answer)
+        
+        logger.info(f"Response {user_ip}: {answer}")  # 로그에 응답 데이터와 사용자 IP 기록
     except Exception as e:
         logger.error(f"Error occurred: {str(e)} from {user_ip}")  # 로그에 오류 메시지와 사용자 IP 기록
         return jsonify({'error': str(e)}), 500
+
+
+
 
 if __name__ == '__main__':
     # 프로덕션 환경에서는 Waitress 서버를 사용
