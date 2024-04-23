@@ -1,7 +1,7 @@
 from langchain.chains import create_tagging_chain
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106", openai_api_key="sk-proj-wSAuT8iKBDytVk6QL0tRT3BlbkFJ7tGEgJYoUwQ9Zvc681Jk")
+llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106")
 
 led_Control_Schema = {
     "description": """

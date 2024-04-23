@@ -21,7 +21,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # llm과 각 센서별 스키마 정의.
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106", openai_api_key="sk-proj-wSAuT8iKBDytVk6QL0tRT3BlbkFJ7tGEgJYoUwQ9Zvc681Jk")
+llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106")
 led_Control_Schema = {
     "description": """
     - This field specifies the brightness of the light from 0 (completely off) to 255 (maximum brightness).
