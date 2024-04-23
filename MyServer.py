@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import requests
 import json
 from langchain.chains import create_tagging_chain
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from waitress import serve
 import logging
 from logging.handlers import RotatingFileHandler
@@ -21,7 +21,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 # llm과 각 센서별 스키마 정의.
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106")
+llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-1106", openai_api_key="sk-proj-wSAuT8iKBDytVk6QL0tRT3BlbkFJ7tGEgJYoUwQ9Zvc681Jk")
 led_Control_Schema = {
     "description": """
     - This field specifies the brightness of the light from 0 (completely off) to 255 (maximum brightness).
@@ -134,4 +134,4 @@ def sensor_Control():
 
 if __name__ == '__main__':
     # 프로덕션 환경에서는 Waitress 서버를 사용
-    serve(app, host='0.0.0.0', port=8080)
+    serve(app, host='0.0.0.0', port=8000)
