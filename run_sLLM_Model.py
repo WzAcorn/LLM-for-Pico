@@ -1,25 +1,16 @@
-import subprocess
+from langchain_community.llms import LlamaCpp
 
-def run_model(executable_path, model_path, prompt, num_tokens=100, temperature=0):
-    # 명령어 구성
-    command = [
-        executable_path, # 실행 파일 경로
-        '-m', model_path, # 모델 경로
-        '-p', prompt, # 프롬프트
-        '-n', str(num_tokens), # 생성할 토큰 수
-        '--temp', str(temperature) # 온도 설정
-    ]
+# 모델 파일 경로 지정
+model_path = "/home/acorn/workspace/LLM-for-Pico/Phi-3-mini-4k-instruct-q4.gguf"
 
-    # subprocess를 사용하여 외부 명령어 실행
-    process = subprocess.run(command, text=True, capture_output=True)
+# LlamaCpp 인스턴스 생성 (콜백 매니저 전달)
+llm = LlamaCpp(model_path=model_path, 
+                n_ctx=512,
+                n_batch=4,
+                max_token=50,
+                temperature=0,
+                verbose=True)
 
-    # 결과 출력 및 반환
-    return process.stdout
-
-# 사용 예
-prompt = "tell me about BTS"
-executable_path = '/home/acorn/workspace/llama.cpp/build/bin/main'
-model_path = '/home/acorn/workspace/llama.cpp/AIFT-instruct-SFT-1.3B-v2.1.gguf'
-
-output = run_model(executable_path, model_path, prompt)
-print(output)
+# 모델에 텍스트 입력하고 출력 받기
+text = "How many members are there in BTS?"
+print(llm.invoke(text))
